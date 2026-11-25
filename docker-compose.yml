@@ -1,0 +1,30 @@
+services:
+  api:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      DATABASE_URL: sqlite+aiosqlite:////app/data/assistant.db
+    volumes:
+      - assistant-data:/app/data
+    depends_on:
+      voice:
+        condition: service_started
+
+  # OpenAI-совместимые STT/TTS. По умолчанию dummy-бэкенды (без GPU и моделей).
+  voice:
+    build:
+      context: .
+      dockerfile: services/voice_gateway/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      STT_BACKEND: dummy
+      TTS_BACKEND: dummy
+    volumes:
+      - ./models:/models:ro
+
+volumes:
+  assistant-data:

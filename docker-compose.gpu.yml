@@ -1,0 +1,59 @@
+# Оверрайд для сервера с 4 ГБ VRAM:
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml --profile gpu up --build
+services:
+  api:
+    environment:
+      STT_BASE_URL: http://voice-gpu:8001/v1
+      TTS_BASE_URL: http://voice-gpu:8001/v1
+      LLM_PROVIDERS: '[{"name":"local","type":"openai","base_url":"http://llm:8080/v1","api_key":"local","model":"qwen2.5-3b-instruct","timeout":25,"temperature":0.3},{"name":"cloud","type":"openai","base_url":"https://openrouter.ai/api/v1","api_key":"${OPENROUTER_API_KEY:-}","model":"openai/gpt-4o-mini","timeout":30,"temperature":0.3}]'
+    depends_on:
+      voice-gpu:
+        condition: service_started
+      llm:
+        condition: service_started
+
+  voice-gpu:
+    profiles: ["gpu"]
+    build:
+      context: .
+      dockerfile: services/voice_gateway/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      STT_BACKEND: whisper
+      TTS_BACKEND: piper
+      STT_DEVICE: cuda
+      STT_COMPUTE_TYPE: int8_float16
+      STT_MODEL_SIZE: small
+      STT_IDLE_UNLOAD_SECONDS: "120"
+    volumes:
+      - ./models:/models:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  llm:
+    profiles: ["gpu"]
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    environment:
+      LLAMA_API_KEY: local
+    command: >
+      --model /models/llm/Qwen2.5-3B-Instruct-Q4_K_M.gguf
+      --host 0.0.0.0 --port 8080
+      --ctx-size 4096 --n-gpu-layers 35
+      --cache-type-k q8_0 --cache-type-v q8_0
+      --threads 4
+    restart: unless-stopped
+    volumes:
+      - ./models:/models:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
