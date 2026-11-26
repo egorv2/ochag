@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import actions, chat, integrations, voice
 from app.config import get_settings
 from app.db import init_db
+from app.openapi import install_openapi
 
 logging.basicConfig(level=get_settings().log_level)
 logger = logging.getLogger("assistant")
@@ -36,6 +37,8 @@ app.include_router(chat.router)
 app.include_router(voice.router)
 app.include_router(actions.router)
 app.include_router(integrations.router)
+
+install_openapi(app)
 
 
 @app.get("/health")

@@ -4,6 +4,8 @@
 
 Подробное проектирование → [docs/DESIGN.md](docs/DESIGN.md). Контракт API → [docs/API.md](docs/API.md).
 
+**Для разработчика клиента:** [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) и готовая спецификация [docs/openapi.json](docs/openapi.json) (OpenAPI 3.1; WebSocket описан расширением `x-websocket`).
+
 ## Быстрый старт (без ключей и GPU)
 
 ```bash

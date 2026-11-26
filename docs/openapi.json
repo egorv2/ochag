@@ -1,0 +1,1128 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Voice Assistant Backend",
+    "description": "Бекенд голосового AI-помощника для бытовых вопросов, поиска и отправки сообщений.\n\nОсобенности:\n- LLM, STT и TTS подключаются через OpenAI-совместимые API;\n- поиск — через настраиваемого провайдера;\n- отправка писем (SMTP) и сообщений MAX выполняется только после явного подтверждения;\n- для мобильных приложений и аудиоколонки доступен потоковый WebSocket-протокол.\n\nВсе мутирующие HTTP-запросы требуют `X-API-Key`; WebSocket — `?token=`.\n",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/v1/chat": {
+      "post": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "Chat",
+        "operationId": "chat_v1_chat_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/stt": {
+      "post": {
+        "tags": [
+          "voice"
+        ],
+        "summary": "Stt",
+        "operationId": "stt_v1_stt_post",
+        "parameters": [
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_stt_v1_stt_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Stt V1 Stt Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/tts": {
+      "post": {
+        "tags": [
+          "voice"
+        ],
+        "summary": "Tts",
+        "operationId": "tts_v1_tts_post",
+        "parameters": [
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TTSRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/voice": {
+      "post": {
+        "tags": [
+          "voice"
+        ],
+        "summary": "Voice Turn",
+        "operationId": "voice_turn_v1_voice_post",
+        "parameters": [
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_voice_turn_v1_voice_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/actions/drafts": {
+      "get": {
+        "tags": [
+          "actions"
+        ],
+        "summary": "List Drafts",
+        "operationId": "list_drafts_v1_actions_drafts_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DraftItem"
+                  },
+                  "title": "Response List Drafts V1 Actions Drafts Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/actions/{draft_id}/confirm": {
+      "post": {
+        "tags": [
+          "actions"
+        ],
+        "summary": "Confirm Draft",
+        "operationId": "confirm_draft_v1_actions__draft_id__confirm_post",
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Draft Id"
+            }
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/actions/{draft_id}/cancel": {
+      "post": {
+        "tags": [
+          "actions"
+        ],
+        "summary": "Cancel Draft",
+        "operationId": "cancel_draft_v1_actions__draft_id__cancel_post",
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Draft Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/integrations/max/webhook": {
+      "post": {
+        "tags": [
+          "integrations"
+        ],
+        "summary": "Max Webhook",
+        "operationId": "max_webhook_v1_integrations_max_webhook_post",
+        "parameters": [
+          {
+            "name": "X-Max-Secret",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Max-Secret"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "title": "Response Max Webhook V1 Integrations Max Webhook Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "WebhookSecret": []
+          }
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "summary": "Ready",
+        "operationId": "ready_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Ready Ready Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ws/voice": {
+      "description": "Потоковый голосовой диалог по WebSocket.\n\nКлиент отправляет бинарные кадры PCM16 16 kHz mono (20–100 мс на кадр) и текстовый\nкадр `{\"type\":\"end\"}` для завершения реплики. Сервер отдаёт события JSON в текстовых\nкадрах, аудио-ответ — чанками base64. Авторизация: `?token=<API_KEY>`.",
+      "parameters": [
+        {
+          "name": "session_id",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Идентификатор сессии диалога (device_id для колонки)."
+        },
+        {
+          "name": "token",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "API-ключ приложения."
+        }
+      ],
+      "x-websocket": {
+        "protocol": "ws",
+        "subprotocol": null,
+        "client_messages": [
+          {
+            "type": "binary",
+            "content": "PCM16 16 kHz mono, base64 не нужен (сырые байты).",
+            "example": "<20-100 мс аудио>"
+          },
+          {
+            "type": "text",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "end",
+                    "cancel"
+                  ]
+                },
+                "confirm_token": {
+                  "type": "string",
+                  "description": "Токен из события action_draft предыдущего turn."
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "example": {
+              "type": "end",
+              "confirm_token": "..."
+            }
+          }
+        ],
+        "server_events": [
+          {
+            "type": "status",
+            "stage": "listening|transcribing|thinking|tool|speaking|cancelled"
+          },
+          {
+            "type": "transcript",
+            "text": "string",
+            "final": true
+          },
+          {
+            "type": "delta",
+            "text": "string"
+          },
+          {
+            "type": "action_draft",
+            "draft": {
+              "id": "draft_...",
+              "channel": "email|max",
+              "recipient": "Мама",
+              "text": "...",
+              "confirm_token": "...",
+              "expires_at": "2026-11-25T12:00:00"
+            }
+          },
+          {
+            "type": "audio",
+            "data": "<base64 audio>",
+            "index": 0
+          },
+          {
+            "type": "answer",
+            "text": "string",
+            "sources": []
+          },
+          {
+            "type": "done",
+            "turn_id": "turn_..."
+          },
+          {
+            "type": "error",
+            "message": "string"
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActionResult": {
+        "properties": {
+          "draft_id": {
+            "type": "string",
+            "title": "Draft Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "channel": {
+            "type": "string",
+            "title": "Channel",
+            "default": ""
+          },
+          "recipient": {
+            "type": "string",
+            "title": "Recipient",
+            "default": ""
+          },
+          "external_id": {
+            "type": "string",
+            "title": "External Id",
+            "default": ""
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "draft_id",
+          "status"
+        ],
+        "title": "ActionResult"
+      },
+      "Body_stt_v1_stt_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_stt_v1_stt_post"
+      },
+      "Body_voice_turn_v1_voice_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          },
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "locale": {
+            "type": "string",
+            "title": "Locale",
+            "default": "ru-RU"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file",
+          "session_id"
+        ],
+        "title": "Body_voice_turn_v1_voice_post"
+      },
+      "ChatRequest": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Session Id"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "locale": {
+            "type": "string",
+            "title": "Locale",
+            "default": "ru-RU"
+          },
+          "confirm_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirm Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "text"
+        ],
+        "title": "ChatRequest"
+      },
+      "ChatResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "turn_id": {
+            "type": "string",
+            "title": "Turn Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceItem"
+            },
+            "type": "array",
+            "title": "Sources",
+            "default": []
+          },
+          "draft": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DraftItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "action_result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ActionResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "default": ""
+          },
+          "usage": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Usage",
+            "default": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "turn_id",
+          "text"
+        ],
+        "title": "ChatResponse"
+      },
+      "ConfirmRequest": {
+        "properties": {
+          "confirm_token": {
+            "type": "string",
+            "title": "Confirm Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "confirm_token"
+        ],
+        "title": "ConfirmRequest"
+      },
+      "DraftItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "channel": {
+            "type": "string",
+            "title": "Channel"
+          },
+          "recipient": {
+            "type": "string",
+            "title": "Recipient"
+          },
+          "recipient_display": {
+            "type": "string",
+            "title": "Recipient Display"
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject",
+            "default": ""
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "confirm_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirm Token"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "channel",
+          "recipient",
+          "recipient_display",
+          "text",
+          "status"
+        ],
+        "title": "DraftItem"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "SourceItem": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "snippet": {
+            "type": "string",
+            "title": "Snippet",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "url"
+        ],
+        "title": "SourceItem"
+      },
+      "TTSRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "format": {
+            "type": "string",
+            "title": "Format",
+            "default": "mp3"
+          },
+          "voice": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voice"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "TTSRequest"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API-ключ приложения из переменной API_KEYS."
+      },
+      "WebhookSecret": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Max-Secret",
+        "description": "Секрет webhook MAX из переменной MAX_WEBHOOK_SECRET."
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Локальный запуск / Docker Compose"
+    },
+    {
+      "url": "https://api.example.com",
+      "description": "Продакшен (замените на свой домен)"
+    }
+  ],
+  "tags": [
+    {
+      "name": "chat",
+      "description": "Текстовые диалоги с инструментами ассистента"
+    },
+    {
+      "name": "voice",
+      "description": "Распознавание, синтез и потоковый голос"
+    },
+    {
+      "name": "actions",
+      "description": "Черновики и подтверждение отправки"
+    },
+    {
+      "name": "integrations",
+      "description": "Входящие webhook от MAX"
+    }
+  ]
+}
